@@ -1,7 +1,7 @@
 import random
 from mesa import Agent
 
-from utils.generators import generate_author_name
+from utils.generators import generate_author_name, generate_language_proficiency_list
 
 
 class Researcher(Agent):
@@ -16,3 +16,6 @@ class Researcher(Agent):
 
         # Generate a name
         self.name = generate_author_name()
+
+        # Generate language proficiency list
+        self.languages = generate_language_proficiency_list()
