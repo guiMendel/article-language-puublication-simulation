@@ -1,1 +1,24 @@
 from src.model import ArticlesModel
+from tuning import initial_author_count, model_years_range
+from utils.months import Month
+
+# Create model
+model = ArticlesModel(initial_author_count)
+
+# model.step(1965, 6)
+# exit()
+
+# For each year
+for year_index in range(model_years_range[1] - model_years_range[0]):
+
+    # Get current year
+    current_year = model_years_range[0] + year_index
+
+    # For each month
+    for month_index in range(1, 13):
+
+        # Get current month
+        current_month = Month(month_index)
+
+        # Advance the month
+        model.step(current_year, current_month)
