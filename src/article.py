@@ -1,13 +1,11 @@
 from typing import Tuple
 from mesa import Agent, Model
+from numpy.lib.function_base import average
 from src.author import Author
 from utils.months import Month
-from utils.random import skewed_random, skewed_range
+from utils.random import skewed_range, weighted_sample
 
-from tuning import (
-    article_cost_range,
-    article_cost_skew,
-)
+import tuning
 
 
 class Article(Agent):
@@ -27,15 +25,24 @@ class Article(Agent):
         self.name = name
         self.authors = authors
         self.language = language
+        self.referencing_articles: list[Article] = []
         self.publish_date: Tuple[Month, int] = None
 
         # Get article time cost
         self.cost = skewed_range(
-            article_cost_range[0],
-            article_cost_range[1],
-            article_cost_skew,
+            tuning.article_cost_range[0],
+            tuning.article_cost_range[1],
+            tuning.article_cost_skew,
             True,
         )
+
+        # Define references
+        self.define_references()
+
+        # Get article quality
+        self.quality = (1 - tuning.article_quality_randomness) * average(
+            [author.competency for author in self.authors]
+        ) + tuning.article_quality_randomness * self.random.random()
 
     def step(self):
         # Do nothing if already published
@@ -48,3 +55,43 @@ class Article(Agent):
         if self.cost <= 0:
             # Add to completed articles
             self.model.publish(self)
+
+    def define_references(self):
+        self.references: list[Article] = []
+
+        # Find out how many
+        reference_count = 1
+        while self.random.random() <= tuning.reference_chance:
+            reference_count += 1
+
+        # Ensure there's enough articles for this
+        if reference_count > len(self.model.published_articles):
+            reference_count = len(self.model.published_articles) // 2
+
+        # Don't try to sample if there are none
+        if reference_count > 0:
+            self.references = weighted_sample(
+                self.model.published_articles,
+                weights=[
+                    article_attractiveness(article)
+                    for article in self.model.published_articles
+                ],
+                sample_size=reference_count,
+            )
+
+    def get_age(self):
+        return self.model.year - self.publish_date[1]
+
+
+def article_attractiveness(article: Article):
+    # Apply quality/reference count
+    attractiveness = len(
+        article.referencing_articles
+    ) * tuning.reference_count_attractability + article.quality * (
+        1 - tuning.reference_count_attractability
+    )
+
+    # Apply age factor
+    attractiveness *= tuning.reference_age_unattractiveness ** article.get_age()
+
+    return attractiveness

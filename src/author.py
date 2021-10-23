@@ -3,10 +3,7 @@ from mesa import Agent
 from utils.generators import generate_author_name, generate_language_proficiency_list
 from utils.random import skewed_random, skewed_range
 
-from tuning import (
-    author_lifespan_range,
-    author_lifespan_skew,
-)
+import tuning
 
 
 class Author(Agent):
@@ -17,7 +14,7 @@ class Author(Agent):
         super().__init__(unique_id, model)
 
         # Generate a competency, skewed to the medium
-        self.competency = skewed_random(5)
+        self.competency = skewed_random(tuning.author_competency_skew)
 
         # Generate a name
         self.name = generate_author_name()
@@ -30,9 +27,9 @@ class Author(Agent):
 
         # Get lifespan
         self.articles_left = skewed_range(
-            author_lifespan_range[0],
-            author_lifespan_range[1],
-            author_lifespan_skew,
+            tuning.author_lifespan_range[0],
+            tuning.author_lifespan_range[1],
+            tuning.author_lifespan_skew,
             True,
         )
 

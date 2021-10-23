@@ -38,9 +38,15 @@ for article in model.published_articles:
 
 pprint(publish_dates)
 
-top_5 = [vars(article) for article in model.published_articles[:5]]
+sorted_articles = sorted(
+    model.published_articles, key=lambda article: len(article.referencing_articles)
+)
 
-for article in top_5:
+top_6 = [vars(article) for article in sorted_articles[-6:]]
+
+for article in top_6:
     article["authors"] = [author.name for author in article["authors"]]
+    article["references"] = len(article["references"])
+    article["referencing_articles"] = len(article["referencing_articles"])
 
-pprint(top_5)
+pprint(top_6)

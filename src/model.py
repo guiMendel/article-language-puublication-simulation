@@ -61,6 +61,10 @@ class ArticlesModel(Model):
         for author in article.authors:
             author.working_on = None
 
+        # Register references
+        for reference in article.references:
+            reference.referencing_articles.append(article)
+
         # Remove from scheduler
         self.schedule.remove(article)
 
