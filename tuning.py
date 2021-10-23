@@ -14,11 +14,19 @@ new_author_range = (2, 20)
 # How much the new authors count gets skewed to the centers
 new_author_skew = 1
 
-# Range of months an author can stay active for
-author_lifespan_range = (1, 360)
+# Range of articles published per author
+author_lifespan_range = (1, 20)
 
 # How much the author's lifespan gets skewed to the center
 author_lifespan_skew = 2
+
+# === Article publication
+
+# Range of months needed for making an article
+article_cost_range = (6, 48)
+
+# Skew of months needed for making an article
+article_cost_skew = 3
 
 # === Language proficiency list generation
 

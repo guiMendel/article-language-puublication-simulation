@@ -1,3 +1,4 @@
+from pprint import pprint
 from src.model import ArticlesModel
 from tuning import initial_author_count, model_years_range
 from utils.months import Month
@@ -22,3 +23,15 @@ for year_index in range(model_years_range[1] - model_years_range[0]):
 
         # Advance the month
         model.step(current_year, current_month)
+
+publish_dates = {}
+
+for article in model.published_articles:
+    date_key = f"{article.publish_date[0]} of {article.publish_date[1]}"
+
+    if not publish_dates.get(date_key):
+        publish_dates[date_key] = 0
+
+    publish_dates[date_key] += 1
+
+pprint(publish_dates)
