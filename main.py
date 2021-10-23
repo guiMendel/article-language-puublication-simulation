@@ -35,3 +35,5 @@ for article in model.published_articles:
     publish_dates[date_key] += 1
 
 pprint(publish_dates)
+
+pprint([vars(article) for article in model.published_articles[:5]])

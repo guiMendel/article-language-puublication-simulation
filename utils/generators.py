@@ -4,7 +4,7 @@ import numpy as np
 import random
 
 # config
-from tuning import chance_of_extra_language
+import tuning
 
 # Author name generator
 def generate_author_name():
@@ -26,12 +26,13 @@ def generate_language_proficiency_list():
 
     # Decide how many languages will be added to the list
     language_count = 1
-    while random.random() <= chance_of_extra_language:
+    while random.random() <= tuning.chance_of_extra_language:
         language_count += 1
 
     return np.random.choice(
         list(language_frequency.keys()), language_count, False, frequencies_corrected
     ).tolist()
+
 
 # Journal name generator
 

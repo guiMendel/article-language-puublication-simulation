@@ -28,6 +28,21 @@ article_cost_range = (6, 48)
 # Skew of months needed for making an article
 article_cost_skew = 3
 
+# === Article name generation
+
+# Chance of generating a connector for a noun
+connector_chance = 0.4
+
+# Chance of generating an adjective for a noun
+adjective_chance = 0.5
+
+# Chance of generating and adjective using names from the noun list, for a noun
+# Only triggers once finished generating regular adjectives
+noun_as_adjective_chance = 0.15
+
+# Chance of all words being capitalized, for some reason
+all_capitalized_chance = 0.1
+
 # === Language proficiency list generation
 
 # Chance of generating an extra language in each iteration

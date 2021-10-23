@@ -1,5 +1,6 @@
 from src.article import Article
 from src.author import Author
+from utils.article_name_generator import generate_article_name
 from utils.months import Month
 from mesa import Model
 from mesa.time import RandomActivation
@@ -48,7 +49,7 @@ class ArticlesModel(Model):
                 # Simulation model
                 self,
                 # Article name
-                "thang",
+                generate_article_name(),
                 # Author name
                 author,
                 # Article language
