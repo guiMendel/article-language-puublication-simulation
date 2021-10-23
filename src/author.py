@@ -54,3 +54,6 @@ class Author(Agent):
             if self.articles_left > 0:
                 # Apply for an article creation
                 self.model.apply_for_article(self)
+            
+            else:
+                self.model.retire(self)

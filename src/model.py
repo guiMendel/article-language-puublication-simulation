@@ -2,8 +2,14 @@ from src.article import Article
 from src.author import Author
 from utils.article_name_generator import generate_article_name
 from utils.months import Month
+from utils.random import skewed_range
+from utils.generators import id_getter
 from mesa import Model
 from mesa.time import RandomActivation
+import tuning
+
+# Initialize id getter
+get_id = id_getter()
 
 
 class ArticlesModel(Model):
@@ -21,21 +27,26 @@ class ArticlesModel(Model):
         # Scheduler
         self.schedule = RandomActivation(self)
 
-        # === Initialization
-
-        # Create agents
-        for index in range(self.author_count):
-            author = Author(index, self)
-
-            # Add to scheduler
-            self.schedule.add(author)
-
     # Monthly action
     def step(self, year: int, month: Month) -> None:
         """Advance the model by one step"""
         # Update date
         self.year = year
         self.month = month
+
+        # Introduce new authors
+        for _ in range(
+            skewed_range(
+                tuning.new_author_range[0],
+                tuning.new_author_range[1],
+                tuning.new_author_skew,
+                True,
+            )
+        ):
+            author = Author(get_id(), self)
+
+            # Add author to scheduler
+            self.schedule.add(author)
 
         # Step all agents
         self.schedule.step()
@@ -45,7 +56,7 @@ class ArticlesModel(Model):
             # Define article to be created
             author.working_on = Article(
                 # Article agent id
-                self.schedule.get_agent_count(),
+                get_id(),
                 # Simulation model
                 self,
                 # Article name
@@ -75,3 +86,10 @@ class ArticlesModel(Model):
 
         # Set it's author as idle
         article.author.working_on = None
+
+        # Remove from scheduler
+        self.schedule.remove(article)
+
+    def retire(self, author: Author):
+        # Remove from scheduler
+        self.schedule.remove(author)

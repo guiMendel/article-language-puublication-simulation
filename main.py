@@ -15,6 +15,8 @@ for year_index in range(model_years_range[1] - model_years_range[0]):
     # Get current year
     current_year = model_years_range[0] + year_index
 
+    print(f"Year {current_year}")
+
     # For each month
     for month_index in range(1, 13):
 
