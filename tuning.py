@@ -31,7 +31,7 @@ article_cost_skew = 3
 # === Article name generation
 
 # Chance of generating a connector for a noun
-connector_chance = 0.4
+connector_chance = 0.40
 
 # Chance of generating an adjective for a noun
 adjective_chance = 0.5
@@ -42,6 +42,18 @@ noun_as_adjective_chance = 0.15
 
 # Chance of all words being capitalized, for some reason
 all_capitalized_chance = 0.1
+
+# Chance of a noun being in plural
+plural_chance = 0.4
+
+# Chance of a noun having an article, i.e. 'the' or 'a'
+noun_article_chance = 0.4
+
+# Minimum name size
+min_name_size = 30
+
+# Maximum name size
+max_name_size = 200
 
 # === Language proficiency list generation
 
