@@ -18,14 +18,18 @@ class ArticlesModel(Model):
     def __init__(self, author_count: int) -> None:
 
         # === Attributes
-        self.author_count = author_count
+        self.author_count = 0
+        self.active_author_count = 0
         self.published_articles: list[Article] = []
+        self.access_level = tuning.starting_access_level
 
         # List of authors waiting for a new article
         self.new_article_waiting_list: list[Author] = []
 
         # Scheduler
         self.schedule = RandomActivation(self)
+
+        self.introduce_authors(author_count)
 
     # Monthly action
     def step(self, year: int, month: Month) -> None:
@@ -34,17 +38,27 @@ class ArticlesModel(Model):
         self.year = year
         self.month = month
 
-        # Introduce new authors
-        self.introduce_monthly_authors()
-
         # Step agents
         self.schedule.step()
+
+        # Introduce new authors
+        self.introduce_authors()
 
         # Create new article projects for authors in waiting list
         self.create_new_articles()
 
         # Empty waiting list
         self.new_article_waiting_list = []
+
+        # Increment access level
+        self.access_level += tuning.yearly_access_level_increment
+
+        # Sort articles by reference count
+        self.published_articles = sorted(
+            self.published_articles,
+            reverse=True,
+            key=lambda article: len(article.referencing_articles),
+        )
 
     def apply_for_article(self, author: Author):
         """Registers the author in a waiting list for new article project distributions"""
@@ -71,6 +85,8 @@ class ArticlesModel(Model):
     def retire(self, author: Author):
         # Remove from scheduler
         self.schedule.remove(author)
+
+        self.active_author_count -= 1
 
     def create_new_articles(self):
         """Creates articles for all authors in the waiting list"""
@@ -159,16 +175,24 @@ class ArticlesModel(Model):
 
         return article
 
-    def introduce_monthly_authors(self):
-        for _ in range(
-            skewed_range(
+    def introduce_authors(self, count: int = None):
+        generate_count = (
+            count
+            if count
+            else skewed_range(
                 tuning.new_author_range[0],
                 tuning.new_author_range[1],
                 tuning.new_author_skew,
                 True,
             )
-        ):
+        )
+
+        for _ in range(generate_count):
             author = Author(get_id(), self)
+
+            # Count author
+            self.author_count += 1
+            self.active_author_count += 1
 
             # Add author to scheduler
             self.schedule.add(author)

@@ -59,28 +59,52 @@ class Article(Agent):
     def define_references(self):
         self.references: list[Article] = []
 
+        # Get all articles that can be referenced
+        accessible_articles = self.get_accessible_articles()
+
         # Find out how many
         reference_count = 1
         while self.random.random() <= tuning.reference_chance:
             reference_count += 1
 
         # Ensure there's enough articles for this
-        if reference_count > len(self.model.published_articles):
-            reference_count = len(self.model.published_articles) // 2
+        if reference_count > len(accessible_articles):
+            reference_count = len(accessible_articles)
 
         # Don't try to sample if there are none
         if reference_count > 0:
             self.references = weighted_sample(
-                self.model.published_articles,
+                accessible_articles,
                 weights=[
-                    article_attractiveness(article)
-                    for article in self.model.published_articles
+                    article_attractiveness(article) for article in accessible_articles
                 ],
                 sample_size=reference_count,
             )
 
     def get_age(self):
         return self.model.year - self.publish_date[1]
+
+    def get_accessible_articles(self) -> list:
+        # Get author language pool
+        language_pool: set[str] = set()
+        for author in self.authors:
+            language_pool.update(author.languages)
+
+        # Get all articles with a language in the pool
+        accessible_articles: list[Article] = [
+            article
+            for article in self.model.published_articles
+            if article.language in language_pool
+        ]
+
+        # Add subset of globally accessible articles
+        accessible_range = round(
+            len(self.model.published_articles) * self.model.access_level
+        )
+
+        accessible_articles += self.model.published_articles[:accessible_range]
+
+        return accessible_articles
 
 
 def article_attractiveness(article: Article):

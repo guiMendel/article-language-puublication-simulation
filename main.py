@@ -1,4 +1,5 @@
 from pprint import pprint
+from src.author import Author
 from src.model import ArticlesModel
 from tuning import initial_author_count, model_years_range
 from utils.months import Month
@@ -15,7 +16,9 @@ for year_index in range(model_years_range[1] - model_years_range[0]):
     # Get current year
     current_year = model_years_range[0] + year_index
 
-    print(f"Year {current_year}")
+    print(
+        f"Year {current_year}: {len(model.published_articles)} articles, {model.author_count} authors ({model.active_author_count} active)"
+    )
 
     # For each month
     for month_index in range(1, 13):
@@ -38,11 +41,7 @@ for article in model.published_articles:
 
 pprint(publish_dates)
 
-sorted_articles = sorted(
-    model.published_articles, key=lambda article: len(article.referencing_articles)
-)
-
-top_6 = [vars(article) for article in sorted_articles[-6:]]
+top_6 = [vars(article) for article in model.published_articles[:6]]
 
 for article in top_6:
     article["authors"] = [author.name for author in article["authors"]]
