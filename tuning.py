@@ -28,6 +28,12 @@ article_cost_range = (6, 48)
 # Skew of months needed for making an article
 article_cost_skew = 3
 
+# Chance of there being another author working on the new article
+extra_author_chance = 0.90
+
+# For every extra author, chance decays by this amount
+extra_author_chance_decay = 0.15
+
 # === Article name generation
 
 # Chance of generating a connector for a noun

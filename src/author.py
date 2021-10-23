@@ -47,13 +47,13 @@ class Author(Agent):
 
         # Check if it is busy. If not, start new article
         if self.working_on is None:
-            # Count new publish
+            # Count new article
             self.articles_left -= 1
 
             # Check if done
             if self.articles_left > 0:
                 # Apply for an article creation
                 self.model.apply_for_article(self)
-            
+
             else:
                 self.model.retire(self)

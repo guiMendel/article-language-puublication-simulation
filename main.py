@@ -38,4 +38,9 @@ for article in model.published_articles:
 
 pprint(publish_dates)
 
-pprint([vars(article) for article in model.published_articles[:5]])
+top_5 = [vars(article) for article in model.published_articles[:5]]
+
+for article in top_5:
+    article["authors"] = [author.name for author in article["authors"]]
+
+pprint(top_5)

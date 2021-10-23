@@ -22,13 +22,13 @@ def id_getter() -> Callable[[], int]:
 
 
 # Author name generator
-def generate_author_name():
+def generate_author_name() -> str:
     names = random.sample(list_of_names, 2)
     return " ".join(names)
 
 
 # Language proficiency list generation
-def generate_language_proficiency_list():
+def generate_language_proficiency_list() -> set[str]:
     # The language frequencies do not sum to 1, so we need to tweak them:
     # The frequencies
     frequencies = list(language_frequency.values())
@@ -44,9 +44,14 @@ def generate_language_proficiency_list():
     while random.random() <= tuning.chance_of_extra_language:
         language_count += 1
 
-    return np.random.choice(
-        list(language_frequency.keys()), language_count, False, frequencies_corrected
-    ).tolist()
+    return set(
+        np.random.choice(
+            list(language_frequency.keys()),
+            language_count,
+            False,
+            frequencies_corrected,
+        ).tolist()
+    )
 
 
 # Journal name generator

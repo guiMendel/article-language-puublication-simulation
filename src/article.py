@@ -14,13 +14,18 @@ class Article(Agent):
     """Defines an article"""
 
     def __init__(
-        self, unique_id: int, model: Model, name: str, author: Author, language: str
+        self,
+        unique_id: int,
+        model: Model,
+        name: str,
+        authors: list[Author],
+        language: str,
     ):
         # Call super
         super().__init__(unique_id, model)
 
         self.name = name
-        self.author = author
+        self.authors = authors
         self.language = language
         self.publish_date: Tuple[Month, int] = None
 
