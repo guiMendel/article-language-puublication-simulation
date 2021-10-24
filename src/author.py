@@ -25,6 +25,10 @@ class Author(Agent):
         # Will hold reference to whichever article it's currently working
         self.working_on = None
 
+        # What language is currently being learned, and for how long
+        self.learning_language = None
+        self.learning_language_months_left = 0
+
         # Get lifespan
         self.articles_left = skewed_range(
             tuning.author_lifespan_range[0],
@@ -52,5 +56,70 @@ class Author(Agent):
                 # Apply for an article creation
                 self.model.apply_for_article(self)
 
+                self.learn_languages()
+
             else:
                 self.model.retire(self)
+
+        else:
+            self.learn_languages()
+
+    def learn_languages(self):
+        # If already learning one, discount a month
+        if self.learning_language:
+            self.learning_language_months_left -= 1
+
+            # If done, add language to languages
+            if self.learning_language_months_left <= 0:
+                # print(f"{self.name} just learned {self.learning_language}!")
+
+                self.languages.add(self.learning_language)
+                self.learning_language = None
+
+            return
+
+        # If not yet learning something, apply chance to begin
+        if self.random.random() > tuning.begin_learning_language_chance:
+            return
+
+        # Chance to learn english regardless of top articles
+        if (
+            "English" not in self.languages
+            and self.random.random() <= tuning.language_learning_english_bias
+        ):
+            self.start_learning("English")
+            return
+
+        # Start learning something new
+        language_sampling_pool: list[str] = []
+
+        # Check top languages
+        for article in self.model.published_articles:
+            # Check if author already knows this language
+            if article.language in self.languages:
+                continue
+
+            # Add to pool
+            language_sampling_pool.append(article.language)
+
+            # Check if done
+            if len(language_sampling_pool) >= tuning.language_sampling_pool_size:
+                break
+
+        # If no languages available, too bad!
+        if len(language_sampling_pool) == 0:
+            return
+
+        # Sample a language from one of these top languages
+        self.start_learning(self.random.choice(language_sampling_pool))
+
+    def start_learning(self, language: str):
+        self.learning_language = language
+
+        # Set how long it will take to learn language
+        self.learning_language_months_left = skewed_range(
+            tuning.language_learning_duration_range[0],
+            tuning.language_learning_duration_range[1],
+            tuning.language_learning_duration_skew,
+            True,
+        )

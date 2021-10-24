@@ -41,6 +41,17 @@ for article in model.published_articles:
 
 pprint(publish_dates)
 
+# languages
+articles_per_language = {}
+
+for article in model.published_articles:
+    if not articles_per_language.get(article.language):
+        articles_per_language[article.language] = 0
+
+    articles_per_language[article.language] += 1
+
+pprint(sorted(articles_per_language.items(), key=lambda item: item[1]))
+
 top_6 = [vars(article) for article in model.published_articles[:6]]
 
 for article in top_6:
@@ -48,4 +59,4 @@ for article in top_6:
     article["references"] = len(article["references"])
     article["referencing_articles"] = len(article["referencing_articles"])
 
-pprint(top_6)
+pprint(list(reversed(top_6)))

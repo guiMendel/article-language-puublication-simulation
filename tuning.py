@@ -67,7 +67,7 @@ max_name_size = 200
 # === Authors
 
 # Number of initial author
-initial_author_count = 2000
+initial_author_count = 300
 
 # Range of new authors per month
 new_author_range = (2, 20)
@@ -86,3 +86,18 @@ chance_of_extra_language = 0.35
 
 # How much authors competencies tend to be pushed to 0.5
 author_competency_skew = 4
+
+# === Language Learning
+
+# How many articles from the top referenced list will serve as a sampling pool
+language_sampling_pool_size = 10
+
+# Chance of starting to learn a new language each month (that's not already spent learning a language)
+begin_learning_language_chance = 0.08
+
+# Range of months it takes to learn a new language
+language_learning_duration_range = (18, 42)
+language_learning_duration_skew = 2
+
+# Chance of choosing english regardless of top articles
+language_learning_english_bias = 0.3
