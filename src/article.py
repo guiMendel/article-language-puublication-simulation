@@ -1,5 +1,7 @@
+from pprint import pprint
 from typing import Tuple
 from mesa import Agent, Model
+import numpy as np
 from numpy.lib.function_base import average
 from src.author import Author
 from utils.months import Month
@@ -60,31 +62,79 @@ class Article(Agent):
         self.references: list[Article] = []
 
         # Get all articles that can be referenced
-        accessible_articles = self.get_accessible_articles()
+        accessible_articles: list[Article] = self.get_accessible_articles()
 
         # Find out how many
-        reference_count = 1
-        while self.random.random() <= tuning.reference_chance:
-            reference_count += 1
+        reference_count = (
+            round(
+                skewed_range(
+                    tuning.reference_count_range[0],
+                    tuning.reference_count_range[1],
+                    tuning.reference_count_skew,
+                    True,
+                )
+                # Smooth out reference count on the first years
+                * tuning.reference_chance_modifier(len(self.model.published_articles))
+            )
+            if len(self.model.published_articles) > 0
+            else 0
+        )
 
         # Ensure there's enough articles for this
         if reference_count > len(accessible_articles):
             reference_count = len(accessible_articles)
 
+        # Find out how many samples will be random
+        random_sample_count = round(tuning.reference_randomly_chance * reference_count)
+
+        # Get random samples
+        self.references = self.random.sample(accessible_articles, random_sample_count)
+
+        # Get weighted sampling pool
+        accessible_articles = accessible_articles[: tuning.reference_sampling_pool_size]
+
         # Don't try to sample if there are none
-        if reference_count > 0:
-            self.references = weighted_sample(
+        if reference_count - random_sample_count > 0:
+            self.references += weighted_sample(
                 accessible_articles,
                 weights=[
-                    article_attractiveness(article) for article in accessible_articles
+                    article.get_attractiveness() for article in accessible_articles
                 ],
-                sample_size=reference_count,
+                sample_size=reference_count - random_sample_count,
             )
 
+        # Count references
+        if not self.model.yearly_references.get(self.model.year):
+            self.model.yearly_references[self.model.year] = {}
+
+        for reference in self.references:
+            if not self.model.yearly_references[self.model.year].get(
+                reference.publish_date[1]
+            ):
+                self.model.yearly_references[self.model.year][
+                    reference.publish_date[1]
+                ] = 1
+            else:
+                self.model.yearly_references[self.model.year][
+                    reference.publish_date[1]
+                ] += 1
+
     def get_age(self):
-        return self.model.year - self.publish_date[1]
+        if self.model.year == self.publish_date[1]:
+            return 0
+
+        # Get year difference
+        year_difference = self.model.year - self.publish_date[1]
+
+        # Get month difference
+        month_distance = self.publish_date[0].value + (12 - self.model.month.value)
+
+        # Return final difference
+        return year_difference - 1 + (1 if month_distance >= 12 else 0)
 
     def get_accessible_articles(self) -> list:
+        return self.model.published_articles
+
         # Get author language pool
         language_pool: set[str] = set()
         for author in self.authors:
@@ -104,18 +154,30 @@ class Article(Agent):
 
         accessible_articles += self.model.published_articles[:accessible_range]
 
+        # Sort them
+        accessible_articles = sorted(
+            accessible_articles,
+            reverse=True,
+            key=lambda article: article.get_attractiveness(),
+        )
+
         return accessible_articles
 
+    def get_attractiveness(self):
+        # Find out proportion between referencing_articles / global max number of referencing_articles
+        reference_count_ratio = (
+            (len(self.referencing_articles) / self.model.max_referencing_articles)
+            if self.model.max_referencing_articles > 0
+            else 0
+        )
 
-def article_attractiveness(article: Article):
-    # Apply quality/reference count
-    attractiveness = len(
-        article.referencing_articles
-    ) * tuning.reference_count_attractability + article.quality * (
-        1 - tuning.reference_count_attractability
-    )
+        # Apply quality/reference count
+        attractiveness = (
+            reference_count_ratio * tuning.reference_count_attractability
+            + self.quality * (1 - tuning.reference_count_attractability)
+        )
 
-    # Apply age factor
-    attractiveness *= tuning.reference_age_unattractiveness ** article.get_age()
+        # Apply age factor
+        attractiveness *= tuning.reference_age_unattractiveness ** self.get_age()
 
-    return attractiveness
+        return attractiveness

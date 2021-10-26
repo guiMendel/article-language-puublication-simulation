@@ -217,6 +217,9 @@ adjective = [
 ]
 
 noun = [
+    "bite",
+    "infection",
+    "zombie",
     "acid",
     "goose",
     "man",

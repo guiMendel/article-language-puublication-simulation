@@ -1,8 +1,9 @@
+from pprint import pprint
 from src.article import Article
 from src.author import Author
 from utils.article_name_generator import generate_article_name
 from utils.months import Month
-from utils.random import skewed_range
+from utils.random import skewed_range, weighted_sample
 from utils.generators import id_getter
 from mesa import Model
 from mesa.time import RandomActivation
@@ -22,6 +23,10 @@ class ArticlesModel(Model):
         self.active_author_count = 0
         self.published_articles: list[Article] = []
         self.access_level = tuning.starting_access_level
+        self.yearly_references = {}
+
+        # The number of citations of the article that has the most
+        self.max_referencing_articles = 0
 
         # List of authors waiting for a new article
         self.new_article_waiting_list: list[Author] = []
@@ -38,6 +43,29 @@ class ArticlesModel(Model):
         self.year = year
         self.month = month
 
+        # Sort articles by reference count
+        self.published_articles = sorted(
+            self.published_articles,
+            reverse=True,
+            key=lambda article: article.get_attractiveness(),
+        )
+
+        faulty_articles = [
+            article
+            for article in self.published_articles[
+                : tuning.reference_sampling_pool_size
+            ]
+            if article.publish_date[1] != self.year
+        ]
+
+        # if self.year > 1985 and len(faulty_articles) > 0:
+        #     pprint(
+        #         [
+        #             (article.publish_date[1], article.get_attractiveness())
+        #             for article in faulty_articles
+        #         ]
+        #     )
+
         # Step agents
         self.schedule.step()
 
@@ -52,13 +80,6 @@ class ArticlesModel(Model):
 
         # Increment access level
         self.access_level += tuning.yearly_access_level_increment
-
-        # Sort articles by reference count
-        self.published_articles = sorted(
-            self.published_articles,
-            reverse=True,
-            key=lambda article: len(article.referencing_articles),
-        )
 
     def apply_for_article(self, author: Author):
         """Registers the author in a waiting list for new article project distributions"""
@@ -78,6 +99,10 @@ class ArticlesModel(Model):
         # Register references
         for reference in article.references:
             reference.referencing_articles.append(article)
+
+            # Keep the max number updated
+            if len(reference.referencing_articles) > self.max_referencing_articles:
+                self.max_referencing_articles = len(reference.referencing_articles)
 
         # Remove from scheduler
         self.schedule.remove(article)
@@ -121,11 +146,33 @@ class ArticlesModel(Model):
                 language_pool.update(extra_author.languages)
 
             # Having a team and a language pool, we just need to create the article
-            self.start_article(author_team, self.random.choice(list(language_pool)))
+            self.start_article(
+                author_team, self.pick_best_language(list(language_pool))
+            )
 
             # Remove these authors from the waiting list
-            for author in self.new_article_waiting_list:
+            for author in author_team:
                 self.new_article_waiting_list.remove(author)
+
+    def pick_best_language(self, language_pool: list[str]):
+        """Among the provided languages, pick the one expected to reach more people"""
+        # Will hold the weights for each language
+        language_weights = [0 for _ in language_pool]
+
+        # Go through the top articles
+        for article in self.published_articles[: tuning.language_evaluation_pool_size]:
+            try:
+                language_index = language_pool.index(article.language)
+                language_weights[language_index] += 1
+            except ValueError:
+                continue
+
+        # If no language received a weight, pick randomly
+        if sum(language_weights) == 0:
+            return self.random.choice(language_pool)
+
+        # Pick based on weight
+        return weighted_sample(language_pool, language_weights, 1)[0]
 
     def choose_author_that_speaks(
         self, language_pool: list[str], exclude: list[Author]

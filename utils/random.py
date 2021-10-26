@@ -1,4 +1,4 @@
-from random import randrange, random
+from random import randrange, random, sample
 from typing import Iterable
 import numpy as np
 
@@ -17,6 +17,10 @@ def skewed_random(skew):
 def weighted_sample(
     iterable: Iterable, weights: list[float], sample_size: int, replace=True
 ):
+    # If weights are 0, return randomly
+    if sum(weights) == 0:
+        return sample(iterable, sample_size)
+
     # In case items do not sum to 1, we need to tweak them:
 
     # How much we need to multiply each weight by

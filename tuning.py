@@ -1,7 +1,9 @@
+import math
+
 # === Model settings
 
 # Range of years model should simulate
-model_years_range = (1965, 1990)
+model_years_range = (1935, 2020)
 
 # === Article publication
 
@@ -23,19 +25,32 @@ article_quality_randomness = 0.4
 # === Article Referencing
 
 # Chance of referencing an extra article
-reference_chance = 0.96
+reference_count_range = (10, 50)
+reference_count_skew = 2
+
+# Modifier of the extra article chance, based on the current amount of published articles
+# This is important to make the simulation smoother on the first years
+reference_chance_modifier = lambda articles_count: articles_count / (
+    articles_count + 1000.0
+)
 
 # Degree to which reference count affects attractability of article on references
 reference_count_attractability = 0.3
 
 # Factor applied to article attractiveness by each year that passes by
-reference_age_unattractiveness = 0.1
+reference_age_unattractiveness = 0.95
 
 # The starting level of access authors will have over articles in languages they don't know
 starting_access_level = 0.02
 
 # How much the access level raises each year
 yearly_access_level_increment = 0.02
+
+# How many articles to pick from the top published articles to form the sampling pool
+reference_sampling_pool_size = 300
+
+# Fraction of references to be sampled completely randomly (without regard to weight)
+reference_randomly_chance = 0.2
 
 # === Article name generation
 
@@ -70,13 +85,13 @@ max_name_size = 200
 initial_author_count = 300
 
 # Range of new authors per month
-new_author_range = (2, 20)
+new_author_range = (1, 15)
 
 # How much the new authors count gets skewed to the centers
 new_author_skew = 1
 
 # Range of articles published per author
-author_lifespan_range = (1, 20)
+author_lifespan_range = (1, 15)
 
 # How much the author's lifespan gets skewed to the center
 author_lifespan_skew = 2
@@ -87,17 +102,20 @@ chance_of_extra_language = 0.35
 # How much authors competencies tend to be pushed to 0.5
 author_competency_skew = 4
 
-# === Language Learning
+# === Language Learning & Choosing
 
 # How many articles from the top referenced list will serve as a sampling pool
 language_sampling_pool_size = 10
 
 # Chance of starting to learn a new language each month (that's not already spent learning a language)
-begin_learning_language_chance = 0.08
+begin_learning_language_chance = 0.1
 
 # Range of months it takes to learn a new language
 language_learning_duration_range = (18, 42)
 language_learning_duration_skew = 2
 
 # Chance of choosing english regardless of top articles
-language_learning_english_bias = 0.3
+language_learning_english_bias = 0.5
+
+# Number of articles to look up for determining the language weights when picking an article's language
+language_evaluation_pool_size = 100

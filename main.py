@@ -52,7 +52,15 @@ for article in model.published_articles:
 
 pprint(sorted(articles_per_language.items(), key=lambda item: item[1]))
 
-top_6 = [vars(article) for article in model.published_articles[:6]]
+sorted_articles = sorted(
+    model.published_articles,
+    reverse=True,
+    key=lambda article: len(article.referencing_articles),
+)
+
+top_6 = [vars(article) for article in sorted_articles[:6]] + [
+    vars(article) for article in sorted_articles[-6:]
+]
 
 for article in top_6:
     article["authors"] = [author.name for author in article["authors"]]
@@ -60,3 +68,5 @@ for article in top_6:
     article["referencing_articles"] = len(article["referencing_articles"])
 
 pprint(list(reversed(top_6)))
+
+# pprint(model.yearly_references)
