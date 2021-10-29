@@ -62,7 +62,7 @@ class Article(Agent):
         self.references: list[Article] = []
 
         # Get all articles that can be referenced
-        accessible_articles: list[Article] = self.get_accessible_articles()
+        accessible_articles: list[Article] = self.model.published_articles
 
         # Find out how many
         reference_count = (
@@ -131,37 +131,6 @@ class Article(Agent):
 
         # Return final difference
         return year_difference - 1 + (1 if month_distance >= 12 else 0)
-
-    def get_accessible_articles(self) -> list:
-        return self.model.published_articles
-
-        # Get author language pool
-        language_pool: set[str] = set()
-        for author in self.authors:
-            language_pool.update(author.languages)
-
-        # Get all articles with a language in the pool
-        accessible_articles: list[Article] = [
-            article
-            for article in self.model.published_articles
-            if article.language in language_pool
-        ]
-
-        # Add subset of globally accessible articles
-        accessible_range = round(
-            len(self.model.published_articles) * self.model.access_level
-        )
-
-        accessible_articles += self.model.published_articles[:accessible_range]
-
-        # Sort them
-        accessible_articles = sorted(
-            accessible_articles,
-            reverse=True,
-            key=lambda article: article.get_attractiveness(),
-        )
-
-        return accessible_articles
 
     def get_attractiveness(self):
         # Find out proportion between referencing_articles / global max number of referencing_articles

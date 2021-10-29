@@ -1,9 +1,10 @@
 from mesa import Agent
 
-from utils.generators import generate_author_name, generate_language_proficiency_list
-from utils.random import skewed_random, skewed_range
+from utils.generators import generate_author_name
+from utils.random import skewed_random, skewed_range, weighted_sample
 
 import tuning
+import numpy as np
 
 
 class Author(Agent):
@@ -20,7 +21,7 @@ class Author(Agent):
         self.name = generate_author_name()
 
         # Generate language proficiency list
-        self.languages = generate_language_proficiency_list()
+        self.languages = self.generate_language_proficiency_list()
 
         # Will hold reference to whichever article it's currently working
         self.working_on = None
@@ -36,6 +37,8 @@ class Author(Agent):
             tuning.author_lifespan_skew,
             True,
         )
+
+        # print(f'{self.name} speaks {", ".join(self.languages)}')
 
     def step(self):
         # print(
@@ -63,6 +66,20 @@ class Author(Agent):
 
         else:
             self.learn_languages()
+
+    def generate_language_proficiency_list(self):
+        # Decide how many languages will be added to the list
+        language_count = 1
+        while self.random.random() <= tuning.chance_of_extra_language:
+            language_count += 1
+
+        return set(
+            weighted_sample(
+                list(self.model.language_weights.keys()),
+                list(self.model.language_weights.values()),
+                language_count,
+            )
+        )
 
     def learn_languages(self):
         # If already learning one, discount a month

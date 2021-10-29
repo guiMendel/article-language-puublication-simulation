@@ -15,7 +15,7 @@ def skewed_random(skew):
 
 
 def weighted_sample(
-    iterable: Iterable, weights: list[float], sample_size: int, replace=True
+    iterable: Iterable, weights: list[float], sample_size: int, replace=False
 ):
     # If weights are 0, return randomly
     if sum(weights) == 0:

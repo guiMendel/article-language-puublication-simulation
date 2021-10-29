@@ -1,3 +1,4 @@
+import csv
 from pprint import pprint
 from src.author import Author
 from src.model import ArticlesModel
@@ -29,6 +30,22 @@ for year_index in range(model_years_range[1] - model_years_range[0]):
         # Advance the month
         model.step(current_year, current_month)
 
+    # languages
+    articles_per_language = {}
+
+    for article in model.published_articles:
+        if not articles_per_language.get(article.language):
+            articles_per_language[article.language] = 0
+
+        articles_per_language[article.language] += 1
+
+    pprint(
+        sorted(articles_per_language.items(), reverse=True, key=lambda item: item[1])[
+            :5
+        ]
+    )
+
+
 publish_dates = {}
 
 for article in model.published_articles:
@@ -58,14 +75,43 @@ sorted_articles = sorted(
     key=lambda article: len(article.referencing_articles),
 )
 
-top_6 = [vars(article) for article in sorted_articles[:6]] + [
-    vars(article) for article in sorted_articles[-6:]
-]
+sorted_articles = [vars(article) for article in sorted_articles]
 
-for article in top_6:
+for article in sorted_articles:
     article["authors"] = [author.name for author in article["authors"]]
     article["references"] = len(article["references"])
     article["referencing_articles"] = len(article["referencing_articles"])
+    article["year"] = article["publish_date"][1]
+    article["month"] = article["publish_date"][0].name
+    del article["publish_date"]
+    del article["cost"]
+    del article["model"]
+    del article["pos"]
+
+# Save the articles
+with open("results.csv", "w") as outputFile:
+    # These are the column names
+    column_names = [
+        "name",
+        "year",
+        "month",
+        "referencing_articles",
+        "references",
+        "unique_id",
+        "language",
+        "authors",
+        "quality",
+    ]
+
+    # Start csv writer
+    writer = csv.DictWriter(outputFile, fieldnames=column_names)
+    writer.writeheader()
+
+    # Write each row
+    for article in sorted_articles:
+        writer.writerow(article)
+
+top_6 = sorted_articles[:6] + sorted_articles[-6:]
 
 pprint(list(reversed(top_6)))
 

@@ -1,3 +1,4 @@
+from data.language_frequency import language_frequency
 from pprint import pprint
 from src.article import Article
 from src.author import Author
@@ -22,8 +23,8 @@ class ArticlesModel(Model):
         self.author_count = 0
         self.active_author_count = 0
         self.published_articles: list[Article] = []
-        self.access_level = tuning.starting_access_level
         self.yearly_references = {}
+        self.language_weights = language_frequency
 
         # The number of citations of the article that has the most
         self.max_referencing_articles = 0
@@ -50,24 +51,11 @@ class ArticlesModel(Model):
             key=lambda article: article.get_attractiveness(),
         )
 
-        faulty_articles = [
-            article
-            for article in self.published_articles[
-                : tuning.reference_sampling_pool_size
-            ]
-            if article.publish_date[1] != self.year
-        ]
-
-        # if self.year > 1985 and len(faulty_articles) > 0:
-        #     pprint(
-        #         [
-        #             (article.publish_date[1], article.get_attractiveness())
-        #             for article in faulty_articles
-        #         ]
-        #     )
-
         # Step agents
         self.schedule.step()
+
+        # Update language weights
+        self.update_language_weights()
 
         # Introduce new authors
         self.introduce_authors()
@@ -78,8 +66,7 @@ class ArticlesModel(Model):
         # Empty waiting list
         self.new_article_waiting_list = []
 
-        # Increment access level
-        self.access_level += tuning.yearly_access_level_increment
+        
 
     def apply_for_article(self, author: Author):
         """Registers the author in a waiting list for new article project distributions"""
@@ -160,7 +147,9 @@ class ArticlesModel(Model):
         language_weights = [0 for _ in language_pool]
 
         # Go through the top articles
-        for article in self.published_articles[: tuning.language_evaluation_pool_size]:
+        for article in self.published_articles[
+            : tuning.article_language_evaluation_pool_size
+        ]:
             try:
                 language_index = language_pool.index(article.language)
                 language_weights[language_index] += 1
@@ -243,3 +232,30 @@ class ArticlesModel(Model):
 
             # Add author to scheduler
             self.schedule.add(author)
+
+    def update_language_weights(self):
+        # Will hold this month's language weights
+        month_weights = {}
+
+        # Look up the languages in a batch of articles
+        for article in self.published_articles:
+            # Ensure this language is in dict
+            if not month_weights.get(article.language):
+                month_weights[article.language] = 1
+            else:
+                month_weights[article.language] += 1
+
+        # Update the model's language weights
+        for language in self.language_weights.keys():
+            # Get the month's influence over the weight
+            language_month_weight = tuning.language_update_speed * (
+                month_weights.get(language) or 0
+            )
+            # The original weight's influence
+            language_original_weight = (
+                1 - tuning.language_update_speed
+            ) * self.language_weights[language]
+
+            self.language_weights[language] = (
+                language_month_weight + language_original_weight
+            )

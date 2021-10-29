@@ -3,7 +3,7 @@ import math
 # === Model settings
 
 # Range of years model should simulate
-model_years_range = (1935, 2020)
+model_years_range = (1915, 2020)
 
 # === Article publication
 
@@ -39,12 +39,6 @@ reference_count_attractability = 0.3
 
 # Factor applied to article attractiveness by each year that passes by
 reference_age_unattractiveness = 0.95
-
-# The starting level of access authors will have over articles in languages they don't know
-starting_access_level = 0.02
-
-# How much the access level raises each year
-yearly_access_level_increment = 0.02
 
 # How many articles to pick from the top published articles to form the sampling pool
 reference_sampling_pool_size = 300
@@ -115,7 +109,13 @@ language_learning_duration_range = (18, 42)
 language_learning_duration_skew = 2
 
 # Chance of choosing english regardless of top articles
-language_learning_english_bias = 0.5
+language_learning_english_bias = 0.7
 
 # Number of articles to look up for determining the language weights when picking an article's language
-language_evaluation_pool_size = 100
+article_language_evaluation_pool_size = 100
+
+# Number of articles to look up when updating the model's language weights
+language_evaluation_pool_size = 1000
+
+# How much of an impact do each month's language weights have when updating the model's language weights
+language_update_speed = 0.15
