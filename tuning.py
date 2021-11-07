@@ -102,14 +102,14 @@ author_competency_skew = 4
 language_sampling_pool_size = 10
 
 # Chance of starting to learn a new language each month (that's not already spent learning a language)
-begin_learning_language_chance = 0.1
+begin_learning_language_chance = 0.10
 
 # Range of months it takes to learn a new language
 language_learning_duration_range = (18, 42)
 language_learning_duration_skew = 2
 
 # Chance of choosing english regardless of top articles
-language_learning_english_bias = 0.7
+language_learning_english_bias = 0.8
 
 # Number of articles to look up for determining the language weights when picking an article's language
 article_language_evaluation_pool_size = 100
